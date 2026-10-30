@@ -70,20 +70,18 @@ submodularity, which is what gives greedy information-gain its guarantee — so
 non-myopic planning should win, and a learned policy should be able to amortize
 that advantage.
 
-Running it (90 seeds, the number that fits in ten minutes on a laptop):
+The case was screened twice. The first run is the one that fits in ten minutes
+on a laptop; the second is the one the first run said was needed.
+
+**Run 1: 90 seeds.**
 
 ```
-case: active_perception_fraud_rings   seeds: 90
-floor (analytic): +0.0000   ceiling (normalizer): +2.6111
-
 strategy                     value    normalized
 random          +0.4333 +/- 0.1483        0.1660
 greedy_voi      +0.4444 +/- 0.1360        0.1702
 lookahead2      +0.5778 +/- 0.1611        0.2213
 lookahead3      +0.6889 +/- 0.1946        0.2638
 
-threat   = lookahead2
-ceiling  = lookahead3
 ratio    = 0.8387
 
 INCONCLUSIVE: ceiling does not beat threat (+0.1111 +/- 0.1326 (t=+0.84)).
@@ -93,18 +91,53 @@ floor-to-ceiling span). To confirm a gap the size of the one observed
 a fail.
 ```
 
-That output is the point of the tool. The ordering looks encouraging and the
-ratio looks almost decisive, and the harness still refuses to call it, because
-90 seeds cannot support the claim. A screening run that answered "0.84, design
-is dead" here would have been guessing.
+The ratio looked almost decisive and the harness still refused to call it.
+It also looked as if `greedy_voi` barely beat `random`, which would have meant
+the case was degenerate.
 
-Two further things this run says out loud, both worth acting on:
+**Run 2: 1,200 seeds** (about an hour on two CPU cores; full output in
+`results/01_active_perception.txt`).
 
-- `greedy_voi` barely beats `random` (0.444 vs 0.433). At this size the case is
-  close to degenerate — the floor-to-ceiling span is not really being traversed
-  by anybody. Tune the instance before trusting any comparison on it.
-- The honest next step is 1000+ seeds, which at ~5 s/seed is a few hours. Cheap
-  compared to building the environment.
+```
+case: active_perception_fraud_rings   seeds: 1200
+floor (analytic): +0.0000   ceiling (normalizer): +2.5475
+
+strategy                     value    normalized
+random          +0.2533 +/- 0.0357        0.0994
+greedy_voi      +0.4792 +/- 0.0450        0.1881
+lookahead2      +0.6517 +/- 0.0472        0.2558
+lookahead3      +0.7292 +/- 0.0475        0.2862
+
+threat   = lookahead2
+ceiling  = lookahead3
+ratio    = 0.8937
+
+DEAD: threat reaches 0.894 of the ceiling (kill above 0.8).
+```
+
+Paired differences on the same 1,200 instances:
+
+| comparison | difference | t |
+|---|---|---|
+| greedy_voi − random | +0.226 ± 0.046 | 4.93 |
+| lookahead2 − greedy_voi | +0.173 ± 0.039 | 4.42 |
+| lookahead3 − lookahead2 | +0.078 ± 0.039 | 1.97 |
+
+What the second run changed:
+
+- **The design is dead, and for the reason the hypothesis predicts.**
+  Complementarity between pairs of measurements is real: non-myopic planning
+  clearly beats greedy (t = 4.4). But a depth-2 lookahead, the cheap thing an
+  opponent writes, already captures 89% of what depth 3 achieves, and the
+  remaining gap is barely distinguishable from zero (t = 1.97). Order-2
+  complementarity is saturated by depth-2 lookahead. There is no room left for
+  a learned policy to show an advantage.
+- **The 90-seed "degenerate case" reading was noise.** With enough seeds,
+  `greedy_voi` beats `random` by a wide margin (t = 4.9). Acting on the small
+  run would have meant re-tuning a case that did not need it.
+
+Both points are the argument for the tool: the cheap run tells you how many
+seeds you need, and the expensive run is still an hour, not weeks of building.
 
 ---
 
@@ -155,7 +188,7 @@ works on your problem without you writing one.
 
 ```bash
 python -m pip install numpy
-python cases/active_perception/run.py 90      # ~8 minutes
+python cases/active_perception/run.py 90      # ~8 minutes; use 1200 for the full result
 python -m pytest tests -q
 ```
 

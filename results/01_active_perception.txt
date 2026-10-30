@@ -1,14 +1,14 @@
-case: active_perception_fraud_rings   seeds: 90
-floor (analytic): +0.0000   ceiling (normalizer): +2.6111
+case: active_perception_fraud_rings   seeds: 1200
+floor (analytic): +0.0000   ceiling (normalizer): +2.5475
 
 strategy                     value    normalized
-random          +0.4333 +/- 0.1483        0.1660
-greedy_voi      +0.4444 +/- 0.1360        0.1702
-lookahead2      +0.5778 +/- 0.1611        0.2213
-lookahead3      +0.6889 +/- 0.1946        0.2638
+random          +0.2533 +/- 0.0357        0.0994
+greedy_voi      +0.4792 +/- 0.0450        0.1881
+lookahead2      +0.6517 +/- 0.0472        0.2558
+lookahead3      +0.7292 +/- 0.0475        0.2862
 
 threat   = lookahead2
 ceiling  = lookahead3
-ratio    = 0.8387
+ratio    = 0.8937
 
-INCONCLUSIVE: ceiling does not beat threat (+0.1111 +/- 0.1326 (t=+0.84)). This run could only have detected a gap of 0.3716 (14.2% of the floor-to-ceiling span). Either the design is dead or you need 30 seeds.
+DEAD: threat reaches 0.894 of the ceiling (kill above 0.8).
